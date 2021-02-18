@@ -4,6 +4,7 @@ import os
 import glob
 import subprocess
 from datetime import datetime
+from scipy.stats import mannwhitneyu
 import tempfile
 import textwrap
 import pandas as pd
@@ -222,7 +223,12 @@ def load_disopred_scores(input_folder, regex="*diso"):
 
     filenames = glob.glob(input_folder + regex)
     for f in filenames:
+        # This works when files are named after the uniprot ID
         protein_ac = f.split("/")[-1].split(".")[0]
+        # This works when the string is not properly formatted
+        # e.g. sp_UNIPROTID_GENENAME
+        if len(protein_ac.split("_")) > 1:
+            protein_ac = protein_ac.split("_")[1]
         dataset = f.split("/")[-2]
         disorder_predictor = "disopred31"
         # Parse the results file with appropriate header and data types to avoid
@@ -370,7 +376,7 @@ def concatenate_results(path_list):
     """
     dflist = []
     for path in path_list:
-        tmpdf = pd.read_csv(filepath_or_buffer=path, header=0, sep="\t")  # index_col=0,
+        tmpdf = pd.read_csv(filepath_or_buffer=path, header=0, sep="\t", index_col=0)
         dflist.append(tmpdf)
     df = pd.concat(dflist)
 
@@ -396,8 +402,24 @@ def load_multi_tables(path_to_folder, regex="*.table"):
 
 
 def calc_classfreq(aggregated_df):
+
     categories = ["IDP", "PDR", "FRAG", "NDP", "ORD"]
     classfreq = aggregated_df.disorder_category.value_counts() / len(aggregated_df)
     classfreq = classfreq.reindex(categories)
     classfreq.fillna(0, inplace=True)
     return classfreq
+
+
+def calc_mannwithney(merged_df):
+    mwu_stat = {}
+
+    for gp, df in merged_df.groupby('effector_type'):
+        ref = df[df['collection_type']=='Reference']['disorder_fraction']
+        eff = df[df['collection_type']=='Effector']['disorder_fraction']
+        reftaxon = df[df['collection_type']=='Reference']['dataset'].unique()[0]
+        _, pval = mannwhitneyu(x=ref, y=eff, alternative='less')
+        mwu_stat[gp] = (reftaxon, pval)
+    mwu_stat_df = pd.DataFrame.from_dict(mwu_stat, orient='index', columns=["Reference taxon", "p-value"])
+
+    return mwu_stat_df
+

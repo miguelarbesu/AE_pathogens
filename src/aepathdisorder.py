@@ -5,6 +5,7 @@ import glob
 import subprocess
 from datetime import datetime
 from scipy.stats import mannwhitneyu
+from scipy.stats import ks_2samp
 import tempfile
 import textwrap
 import pandas as pd
@@ -422,4 +423,18 @@ def calc_mannwithney(merged_df):
     mwu_stat_df = pd.DataFrame.from_dict(mwu_stat, orient='index', columns=["Reference taxon", "p-value"])
 
     return mwu_stat_df
+
+def calc_kolmogorovsmirnov(merged_df):
+    ks_stat = {}
+
+    for gp, df in merged_df.groupby('effector_type'):
+        ref = df[df['collection_type']=='Reference']['disorder_fraction']
+        eff = df[df['collection_type']=='Effector']['disorder_fraction']
+        reftaxon = df[df['collection_type']=='Reference']['dataset'].unique()[0]
+        _, pval = ks_2samp(ref, eff)
+        ks_stat[gp] = (reftaxon, pval)
+    ks_stat_df = pd.DataFrame.from_dict(ks_stat, orient='index', columns=["Reference taxon", "p-value"])
+
+    return ks_stat_df
+
 

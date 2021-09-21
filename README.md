@@ -1,8 +1,6 @@
 # Computational analysis of structural disorder in A/E pathogen effectors.
 
-This repository contains the code written for the bioinformatic study in *The bacterial
-effector Tir hijacks host signaling with protein disorder, multivalency and mimicry
-(temporary title)* (2021).
+This repository contains the code written for the bioinformatic study in *A pathogen-encoded signaling receptor mediating host-like interactions through intrinsic disorder (temporary title)* (2021).
 
 We use sequence-based predictors to assess and compare the amount of structural disorder
 in proteins from intestinal pathogens. Per-amino acid scores were calculated, aggregated

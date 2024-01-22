@@ -186,3 +186,4 @@ src/3rdparty
 .vscode/settings.json
 .vscode/launch.json
 osf_filelist.md
+.conda
